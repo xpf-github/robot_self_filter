@@ -118,7 +118,10 @@ namespace robot_self_filter
       self_filter_->getLinkNames(frames_);
 
       // Subscribe to input cloud with sensor data QoS (BEST_EFFORT)
+      // Self filtering must operate on the newest sensor frame.  Keeping a
+      // backlog makes the collision scene stale when one frame is slow.
       rclcpp::QoS input_qos = rclcpp::SensorDataQoS();
+      input_qos.keep_last(static_cast<size_t>(std::max(1, max_queue_size_)));
       sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
           in_topic_,
           input_qos,
@@ -128,11 +131,12 @@ namespace robot_self_filter
   private:
     void cloudCallback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &cloud)
     {
-      RCLCPP_INFO(this->get_logger(), "Received cloud message with timestamp %.6f",
-                  rclcpp::Time(cloud->header.stamp).seconds());
+      RCLCPP_DEBUG(this->get_logger(), "Received cloud message with timestamp %.6f",
+                   rclcpp::Time(cloud->header.stamp).seconds());
 
-      RCLCPP_INFO(this->get_logger(), "Point cloud size: width = %d, height = %d, total points = %d",
-                  cloud->width, cloud->height, cloud->width * cloud->height);
+      RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
+                           "Filtering point cloud: width=%u height=%u total=%u",
+                           cloud->width, cloud->height, cloud->width * cloud->height);
 
       sensor_msgs::msg::PointCloud2 out2;
       int input_size = 0;
@@ -285,7 +289,9 @@ namespace robot_self_filter
       }
 
       marker_pub_->publish(marker_array);
-      RCLCPP_INFO(this->get_logger(), "Published %zu collision shapes", marker_array.markers.size());
+      RCLCPP_INFO_THROTTLE(
+        this->get_logger(), *this->get_clock(), 2000,
+        "Published %zu collision shapes", marker_array.markers.size());
     }
 
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
