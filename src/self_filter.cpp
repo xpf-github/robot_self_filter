@@ -153,7 +153,7 @@ namespace robot_self_filter
         if (!sf_xyz)
           return;
         auto mask = sf_xyz->getSelfMaskPtr();
-        publishShapesFromMask(mask, cloud->header.frame_id);
+        publishShapesFromMask(mask, cloud->header.frame_id, cloud->header.stamp);
         break;
       }
       case SensorType::OusterSensor:
@@ -162,7 +162,7 @@ namespace robot_self_filter
         if (!sf_ouster)
           return;
         auto mask = sf_ouster->getSelfMaskPtr();
-        publishShapesFromMask(mask, cloud->header.frame_id);
+        publishShapesFromMask(mask, cloud->header.frame_id, cloud->header.stamp);
         break;
       }
       default:
@@ -172,7 +172,10 @@ namespace robot_self_filter
     }
 
     template <typename PointT>
-    void publishShapesFromMask(robot_self_filter::SelfMask<PointT> *mask, const std::string &pointcloud_frame)
+    void publishShapesFromMask(
+        robot_self_filter::SelfMask<PointT> *mask,
+        const std::string &pointcloud_frame,
+        const builtin_interfaces::msg::Time &pointcloud_stamp)
     {
       if (!mask)
         return;
@@ -196,7 +199,7 @@ namespace robot_self_filter
 
         visualization_msgs::msg::Marker mk;
         mk.header.frame_id = shapes_frame;
-        mk.header.stamp = this->get_clock()->now();
+        mk.header.stamp = pointcloud_stamp;
         mk.ns = "self_filter_shapes";
         mk.id = static_cast<int>(i);
         mk.action = visualization_msgs::msg::Marker::ADD;
