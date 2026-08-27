@@ -54,6 +54,7 @@ endif()
 # Check which variables are actually populated in your environment.
 include_directories(
   include
+  ${BULLET_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
   ${ASSIMP_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
@@ -217,7 +218,6 @@ ament_export_include_directories(
 ament_export_libraries(
   robot_geometric_shapes
   ${PROJECT_NAME}
-  ${BULLET_LIBRARIES}
   ${ASSIMP_LIBRARIES}
 )
 
